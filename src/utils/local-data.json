@@ -1,0 +1,248 @@
+[
+    {
+       "id":"<generate_id>",
+       "name":"Coffee House Downtown",
+       "description":"A cozy coffee shop with fast WiFi and plenty of seating.",
+       "address":"123 Main St, Anytown, USA",
+       "location":{
+           "latitude":37.7749,
+           "longitude":-122.4194
+        },
+       "amenities":{
+           "wifi":true,
+           "coffee":true,
+           "outlets":true,
+           "seating":true,
+           "food":true,
+           "workspace":true,
+           "meetingRooms":false,
+           "parking":false
+        },
+       "attributes":{
+           "noiseLevel":"moderate",
+           "rating":4.5,
+           "openLate":false,
+           "parking": "lot",
+           "capacity": "medium",
+           "seatingComfort": 4,
+           "coffeeRating": 5
+        },
+       "openingHours":[
+            {"day":"monday","open":"07:00","close":"20:00" },
+            {"day":"tuesday","open":"07:00","close":"20:00" },
+            {"day":"wednesday","open":"07:00","close":"20:00" },
+            {"day":"thursday","open":"07:00","close":"20:00" },
+            {"day":"friday","open":"07:00","close":"22:00" },
+            {"day":"saturday","open":"08:00","close":"22:00" },
+            {"day":"sunday","open":"08:00","close":"18:00" }
+        ],
+       "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+    {
+       "id":"<generate_id>",
+       "name":"Quiet Library Workspace",
+       "description":"Public library with dedicated workspaces and fast internet.",
+       "address":"456 Oak Ave, Anytown, USA",
+       "location":{
+           "latitude":37.7648,
+           "longitude":-122.4077
+        },
+       "amenities":{
+           "wifi":true,
+           "coffee":false,
+           "outlets":true,
+           "seating":true,
+           "food":false,
+           "workspace":true,
+           "meetingRooms":true,
+           "parking":true
+        },
+       "attributes":{
+           "noiseLevel":"quiet",
+           "rating":4.2,
+           "openLate":false,
+           "parking": "lot",
+           "capacity": "large",
+           "seatingComfort": 3,
+           "coffeeRating": 0
+        },
+       "openingHours":[
+            {"day":"monday","open":"09:00","close":"18:00" },
+            {"day":"tuesday","open":"09:00","close":"18:00" },
+            {"day":"wednesday","open":"09:00","close":"18:00" },
+            {"day":"thursday","open":"09:00","close":"18:00" },
+            {"day":"friday","open":"09:00","close":"17:00" },
+            {"day":"saturday","open":"10:00","close":"16:00" },
+            {"day":"sunday","open":"12:00","close":"16:00" }
+        ],
+       "photos":["library-1.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+    {
+       "id":"<generate_id>",
+       "name":"Tech Hub Coworking",
+       "description":"Modern coworking space with all amenities for tech professionals.",
+       "address":"789 Tech Blvd, Anytown, USA",
+       "location":{
+           "latitude":37.7834,
+           "longitude":-122.4071
+        },
+       "amenities":{
+           "wifi":true,
+           "coffee":true,
+           "outlets":true,
+           "seating":true,
+           "food":true,
+           "workspace":true,
+           "meetingRooms":true,
+           "parking":true
+        },
+       "attributes":{
+           "noiseLevel":"moderate",
+           "rating":4.8,
+           "openLate":true,
+           "parking": "garage",
+           "capacity": "large",
+           "seatingComfort": 5,
+           "coffeeRating": 4
+        },
+       "openingHours":[
+            {"day":"monday","open":"06:00","close":"00:00" },
+            {"day":"tuesday","open":"06:00","close":"00:00" },
+            {"day":"wednesday","open":"06:00","close":"00:00" },
+            {"day":"thursday","open":"06:00","close":"00:00" },
+            {"day":"friday","open":"06:00","close":"00:00" },
+            {"day":"saturday","open":"08:00","close":"22:00" },
+            {"day":"sunday","open":"08:00","close":"22:00" }
+        ],
+       "photos":["tech-hub-1.jpg", "tech-hub-2.jpg", "tech-hub-3.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+    {
+       "id":"<generate_id>",
+       "name":"Beachside Cafe",
+       "description":"Work with an ocean view and great coffee.",
+       "address":"101 Coastal Highway, Beachtown, USA",
+       "location":{
+           "latitude":33.6189,
+           "longitude":-117.9298
+        },
+       "amenities":{
+           "wifi":true,
+           "coffee":true,
+           "outlets":false,
+           "seating":true,
+           "food":true,
+           "workspace":false,
+           "meetingRooms":false,
+           "parking":true
+        },
+       "attributes":{
+           "noiseLevel":"loud",
+           "rating":4.0,
+           "openLate":false,
+           "parking": "street",
+           "capacity": "small",
+           "seatingComfort": 3,
+           "coffeeRating": 4
+        },
+       "openingHours":[
+            {"day":"monday","open":"08:00","close":"18:00" },
+            {"day":"tuesday","open":"08:00","close":"18:00" },
+            {"day":"wednesday","open":"08:00","close":"18:00" },
+            {"day":"thursday","open":"08:00","close":"18:00" },
+            {"day":"friday","open":"08:00","close":"20:00" },
+            {"day":"saturday","open":"07:00","close":"20:00" },
+            {"day":"sunday","open":"07:00","close":"20:00" }
+        ],
+       "photos":["beachside-1.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+    {
+       "id":"<generate_id>",
+       "name":"Creative Studio",
+       "description":"Open workspace for creative professionals with high-speed internet.",
+       "address":"202 Artist Lane, Creative District, USA",
+       "location":{
+           "latitude":40.7128,
+           "longitude":-74.0060
+        },
+       "amenities":{
+           "wifi":true,
+           "coffee":true,
+           "outlets":true,
+           "seating":true,
+           "food":false,
+           "workspace":true,
+           "meetingRooms":false,
+           "parking":false
+        },
+       "attributes":{
+           "noiseLevel":"moderate",
+           "rating":4.3,
+           "openLate":true,
+           "parking": "none",
+           "capacity": "medium",
+           "seatingComfort": 4,
+           "coffeeRating": 5
+        },
+       "openingHours":[
+            {"day":"monday","open":"10:00","close":"22:00" },
+            {"day":"tuesday","open":"10:00","close":"22:00" },
+            {"day":"wednesday","open":"10:00","close":"22:00" },
+            {"day":"thursday","open":"10:00","close":"22:00" },
+            {"day":"friday","open":"10:00","close":"00:00" },
+            {"day":"saturday","open":"12:00","close":"00:00" },
+            {"day":"sunday","open":"12:00","close":"20:00" }
+        ],
+       "photos":["creative-1.jpg", "creative-2.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+    {
+       "id":"<generate_id>",
+       "name":"Bookstore Cafe",
+       "description":"A quiet corner with books, coffee, and free wifi.",
+       "address":"303 Reader's Row, Booktown, USA",
+       "location":{
+           "latitude":41.8781,
+           "longitude":-87.6298
+        },
+       "amenities":{
+           "wifi":true,
+           "coffee":true,
+           "outlets":true,
+           "seating":true,
+           "food":true,
+           "workspace":false,
+           "meetingRooms":false,
+           "parking":false
+        },
+       "attributes":{
+           "noiseLevel":"quiet",
+           "rating":4.7,
+           "openLate":false,
+           "parking": "none",
+           "capacity": "small",
+           "seatingComfort": 4,
+           "coffeeRating": 5
+        },
+       "openingHours":[
+            {"day":"monday","open":"09:00","close":"21:00" },
+            {"day":"tuesday","open":"09:00","close":"21:00" },
+            {"day":"wednesday","open":"09:00","close":"21:00" },
+            {"day":"thursday","open":"09:00","close":"21:00" },
+            {"day":"friday","open":"09:00","close":"22:00" },
+            {"day":"saturday","open":"10:00","close":"22:00" },
+            {"day":"sunday","open":"10:00","close":"19:00" }
+        ],
+       "photos":["bookstore-1.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    }
+]
