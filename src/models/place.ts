@@ -23,7 +23,7 @@ export const PlaceSchema = z.object({
     }),
     attributes: z.object({
         parking: z.enum(['none', 'street', 'lot', 'garage', 'valet']).default('none'),
-        capacity: z.enum(['extra-small', 'small', 'medium', 'large']).optional(), 
+        capacity: z.enum(['extra-small', 'small', 'medium', 'large']).optional(), //extra small = 1-10, small = 11-20, medium = 21-30, larger = 31+
         noiseLevel: z.enum(['quiet', 'moderate', 'loud']),
         seatingComfort: z.number().min(1).max(5).optional(),
         rating: z.number().min(0).max(5).optional(),

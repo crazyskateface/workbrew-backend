@@ -42,53 +42,12 @@
 "updatedAt": "now"    },
     {
        "id":"<generate_id>",
-       "name":"Quiet Library Workspace",
-       "description":"Public library with dedicated workspaces and fast internet.",
-       "address":"456 Oak Ave, Anytown, USA",
+       "name":"The Coffee Peddlar",
+       "description":"Coffee shop in a historic small town district with a warm atmosphere and plenty of seating.",
+       "address":"112 Harrison Ave, Harrison, OH, 45030, USA",
        "location":{
-           "latitude":37.7648,
-           "longitude":-122.4077
-        },
-       "amenities":{
-           "wifi":true,
-           "coffee":false,
-           "outlets":true,
-           "seating":true,
-           "food":false,
-           "workspace":true,
-           "meetingRooms":true,
-           "parking":true
-        },
-       "attributes":{
-           "noiseLevel":"quiet",
-           "rating":4.2,
-           "openLate":false,
-           "parking": "lot",
-           "capacity": "large",
-           "seatingComfort": 3,
-           "coffeeRating": 0
-        },
-       "openingHours":[
-            {"day":"monday","open":"09:00","close":"18:00" },
-            {"day":"tuesday","open":"09:00","close":"18:00" },
-            {"day":"wednesday","open":"09:00","close":"18:00" },
-            {"day":"thursday","open":"09:00","close":"18:00" },
-            {"day":"friday","open":"09:00","close":"17:00" },
-            {"day":"saturday","open":"10:00","close":"16:00" },
-            {"day":"sunday","open":"12:00","close":"16:00" }
-        ],
-       "photos":["library-1.jpg"],
-
-"createdAt": "now",
-"updatedAt": "now"    },
-    {
-       "id":"<generate_id>",
-       "name":"Tech Hub Coworking",
-       "description":"Modern coworking space with all amenities for tech professionals.",
-       "address":"789 Tech Blvd, Anytown, USA",
-       "location":{
-           "latitude":37.7834,
-           "longitude":-122.4071
+           "latitude":39.261818,
+           "longitude":-84.8219963
         },
        "amenities":{
            "wifi":true,
@@ -97,151 +56,234 @@
            "seating":true,
            "food":true,
            "workspace":true,
-           "meetingRooms":true,
-           "parking":true
-        },
-       "attributes":{
-           "noiseLevel":"moderate",
-           "rating":4.8,
-           "openLate":true,
-           "parking": "garage",
-           "capacity": "large",
-           "seatingComfort": 5,
-           "coffeeRating": 4
-        },
-       "openingHours":[
-            {"day":"monday","open":"06:00","close":"00:00" },
-            {"day":"tuesday","open":"06:00","close":"00:00" },
-            {"day":"wednesday","open":"06:00","close":"00:00" },
-            {"day":"thursday","open":"06:00","close":"00:00" },
-            {"day":"friday","open":"06:00","close":"00:00" },
-            {"day":"saturday","open":"08:00","close":"22:00" },
-            {"day":"sunday","open":"08:00","close":"22:00" }
-        ],
-       "photos":["tech-hub-1.jpg", "tech-hub-2.jpg", "tech-hub-3.jpg"],
-
-"createdAt": "now",
-"updatedAt": "now"    },
-    {
-       "id":"<generate_id>",
-       "name":"Beachside Cafe",
-       "description":"Work with an ocean view and great coffee.",
-       "address":"101 Coastal Highway, Beachtown, USA",
-       "location":{
-           "latitude":33.6189,
-           "longitude":-117.9298
-        },
-       "amenities":{
-           "wifi":true,
-           "coffee":true,
-           "outlets":false,
-           "seating":true,
-           "food":true,
-           "workspace":false,
            "meetingRooms":false,
            "parking":true
         },
        "attributes":{
            "noiseLevel":"loud",
-           "rating":4.0,
+           "rating":3.5,
            "openLate":false,
-           "parking": "street",
-           "capacity": "small",
-           "seatingComfort": 3,
-           "coffeeRating": 4
-        },
-       "openingHours":[
-            {"day":"monday","open":"08:00","close":"18:00" },
-            {"day":"tuesday","open":"08:00","close":"18:00" },
-            {"day":"wednesday","open":"08:00","close":"18:00" },
-            {"day":"thursday","open":"08:00","close":"18:00" },
-            {"day":"friday","open":"08:00","close":"20:00" },
-            {"day":"saturday","open":"07:00","close":"20:00" },
-            {"day":"sunday","open":"07:00","close":"20:00" }
-        ],
-       "photos":["beachside-1.jpg"],
-
-"createdAt": "now",
-"updatedAt": "now"    },
-    {
-       "id":"<generate_id>",
-       "name":"Creative Studio",
-       "description":"Open workspace for creative professionals with high-speed internet.",
-       "address":"202 Artist Lane, Creative District, USA",
-       "location":{
-           "latitude":40.7128,
-           "longitude":-74.0060
-        },
-       "amenities":{
-           "wifi":true,
-           "coffee":true,
-           "outlets":true,
-           "seating":true,
-           "food":false,
-           "workspace":true,
-           "meetingRooms":false,
-           "parking":false
-        },
-       "attributes":{
-           "noiseLevel":"moderate",
-           "rating":4.3,
-           "openLate":true,
-           "parking": "none",
+           "parking": "lot",
            "capacity": "medium",
            "seatingComfort": 4,
-           "coffeeRating": 5
+           "coffeeRating": 3
         },
        "openingHours":[
-            {"day":"monday","open":"10:00","close":"22:00" },
-            {"day":"tuesday","open":"10:00","close":"22:00" },
-            {"day":"wednesday","open":"10:00","close":"22:00" },
-            {"day":"thursday","open":"10:00","close":"22:00" },
-            {"day":"friday","open":"10:00","close":"00:00" },
-            {"day":"saturday","open":"12:00","close":"00:00" },
-            {"day":"sunday","open":"12:00","close":"20:00" }
+            {"day":"monday","open":"07:00","close":"18:00" },
+            {"day":"tuesday","open":"07:00","close":"18:00" },
+            {"day":"wednesday","open":"07:00","close":"18:00" },
+            {"day":"thursday","open":"07:00","close":"18:00" },
+            {"day":"friday","open":"07:00","close":"17:00" },
+            {"day":"saturday","open":"08:00","close":"16:00" }
         ],
-       "photos":["creative-1.jpg", "creative-2.jpg"],
+       "photos":["library-1.jpg"],
 
 "createdAt": "now",
 "updatedAt": "now"    },
-    {
-       "id":"<generate_id>",
-       "name":"Bookstore Cafe",
-       "description":"A quiet corner with books, coffee, and free wifi.",
-       "address":"303 Reader's Row, Booktown, USA",
-       "location":{
-           "latitude":41.8781,
-           "longitude":-87.6298
-        },
-       "amenities":{
-           "wifi":true,
-           "coffee":true,
-           "outlets":true,
-           "seating":true,
-           "food":true,
-           "workspace":false,
-           "meetingRooms":false,
-           "parking":false
-        },
-       "attributes":{
-           "noiseLevel":"quiet",
-           "rating":4.7,
-           "openLate":false,
-           "parking": "none",
-           "capacity": "small",
-           "seatingComfort": 4,
-           "coffeeRating": 5
-        },
-       "openingHours":[
-            {"day":"monday","open":"09:00","close":"21:00" },
-            {"day":"tuesday","open":"09:00","close":"21:00" },
-            {"day":"wednesday","open":"09:00","close":"21:00" },
-            {"day":"thursday","open":"09:00","close":"21:00" },
-            {"day":"friday","open":"09:00","close":"22:00" },
-            {"day":"saturday","open":"10:00","close":"22:00" },
-            {"day":"sunday","open":"10:00","close":"19:00" }
-        ],
-       "photos":["bookstore-1.jpg"],
+  
+{
+    "id":"<generate_id>",
+    "name":"Starbucks",
+    "description":"Seattle-based coffeehouse chain known for its signature roasts, light bites, and WiFi availability.",
+    "address":"10894 New Haven Rd., Harrison, OH, 45030, USA",
+    "location":{
+        "latitude":39.2590744,
+        "longitude":-84.8019858
+     },
+    "amenities":{
+        "wifi":true,
+        "coffee":true,
+        "outlets":true,
+        "seating":true,
+        "food":true,
+        "workspace":true,
+        "meetingRooms":false,
+        "parking":true
+     },
+    "attributes":{
+        "noiseLevel":"moderate",
+        "rating":3.0,
+        "openLate":true,
+        "parking": "lot",
+        "capacity": "small",
+        "seatingComfort": 2,
+        "coffeeRating": 3.75
+     },
+    "openingHours":[
+         {"day":"monday","open":"04:30","close":"20:00" },
+         {"day":"tuesday","open":"04:30","close":"20:00" },
+         {"day":"wednesday","open":"04:30","close":"20:00" },
+         {"day":"thursday","open":"04:30","close":"20:00" },
+         {"day":"friday","open":"04:30","close":"21:00" },
+         {"day":"saturday","open":"05:30","close":"21:00" },
+         {"day":"sunday","open":"05:30","close":"21:00" }
+     ],
+    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+
+{
+    "id":"<generate_id>",
+    "name":"Square Mile Coffee Company",
+    "description":"Local coffee shop featuring innovative seasonal drinks, homemade pastries, and comfortable seating.",
+    "address":"7420 Hamilton Ave, Mt. Healthy, OH, 45231, USA",
+    "location":{
+        "latitude":39.2631942,
+        "longitude":-84.6258022
+     },
+    "amenities":{
+        "wifi":true,
+        "coffee":true,
+        "outlets":true,
+        "seating":true,
+        "food":true,
+        "workspace":true,
+        "meetingRooms":false,
+        "parking":true
+     },
+    "attributes":{
+        "noiseLevel":"moderate",
+        "rating":4.5,
+        "openLate":false,
+        "parking": "lot",
+        "capacity": "medium",
+        "seatingComfort": 4,
+        "coffeeRating": 5
+     },
+    "openingHours":[
+         {"day":"monday","open":"06:00","close":"15:00" },
+         {"day":"wednesday","open":"06:00","close":"15:00" },
+         {"day":"thursday","open":"06:00","close":"15:00" },
+         {"day":"friday","open":"06:00","close":"15:00" },
+         {"day":"saturday","open":"06:00","close":"15:00" },
+         {"day":"sunday","open":"06:00","close":"15:00" }
+     ],
+    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+
+{
+    "id":"<generate_id>",
+    "name":"White Oak Coffee House",
+    "description":"A cozy coffee shop with great coffee and local baked goods.",
+    "address":"5935 Cheviot Rd, Cincinnati, OH, 45247, USA",
+    "location":{
+        "latitude":39.2011819,
+        "longitude":-84.6710086
+     },
+    "amenities":{
+        "wifi":true,
+        "coffee":true,
+        "outlets":true,
+        "seating":true,
+        "food":true,
+        "workspace":true,
+        "meetingRooms":false,
+        "parking":true
+     },
+    "attributes":{
+        "noiseLevel":"moderate",
+        "rating":4.0,
+        "openLate":false,
+        "parking": "lot",
+        "capacity": "medium",
+        "seatingComfort": 2.75,
+        "coffeeRating": 4.5
+     },
+    "openingHours":[
+         {"day":"monday","open":"06:30","close":"14:00" },
+         {"day":"tuesday","open":"06:30","close":"14:00" },
+         {"day":"wednesday","open":"06:30","close":"14:00" },
+         {"day":"thursday","open":"06:30","close":"14:00" },
+         {"day":"friday","open":"06:30","close":"17:00" },
+         {"day":"saturday","open":"07:30","close":"14:00" }
+     ],
+    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+
+{
+    "id":"<generate_id>",
+    "name":"Starbucks",
+    "description":"Seattle-based coffeehouse chain known for its signature roasts, light bites, and WiFi availability.",
+    "address":"9911 Colerain Ave, Cincinnati, OH, 45251, USA",
+    "location":{
+        "latitude":39.2357934,
+        "longitude":-84.6534871
+     },
+    "amenities":{
+        "wifi":true,
+        "coffee":true,
+        "outlets":true,
+        "seating":true,
+        "food":true,
+        "workspace":true,
+        "meetingRooms":false,
+        "parking":true
+     },
+    "attributes":{
+        "noiseLevel":"moderate",
+        "rating":4.5,
+        "openLate":true,
+        "parking": "lot",
+        "capacity": "small",
+        "seatingComfort": 3,
+        "coffeeRating": 3.75
+     },
+    "openingHours":[
+         {"day":"monday","open":"04:30","close":"21:00" },
+         {"day":"tuesday","open":"04:30","close":"21:00" },
+         {"day":"wednesday","open":"04:30","close":"21:00" },
+         {"day":"thursday","open":"04:30","close":"21:00" },
+         {"day":"friday","open":"04:30","close":"21:00" },
+         {"day":"saturday","open":"05:00","close":"21:00" },
+         {"day":"sunday","open":"05:00","close":"21:00" }
+     ],
+    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+
+"createdAt": "now",
+"updatedAt": "now"    },
+
+{
+    "id":"<generate_id>",
+    "name":"Shepherd's Ground Coffee Shop",
+    "description":"A quaint coffee shop in a converted house.",
+    "address":"4190 Hamilton Cleves Rd, Fairfield, OH, 45014, USA",
+    "location":{
+        "latitude":39.252514,
+        "longitude":-84.6752177
+     },
+    "amenities":{
+        "wifi":true,
+        "coffee":true,
+        "outlets":true,
+        "seating":true,
+        "food":true,
+        "workspace":true,
+        "meetingRooms":false,
+        "parking":true
+     },
+    "attributes":{
+        "noiseLevel":"quiet",
+        "rating":3.75,
+        "openLate":false,
+        "parking": "lot",
+        "capacity": "small",
+        "seatingComfort": 3.75,
+        "coffeeRating": 4
+     },
+    "openingHours":[
+         {"day":"monday","open":"06:00","close":"17:00" },
+         {"day":"tuesday","open":"06:00","close":"17:00" },
+         {"day":"wednesday","open":"06:00","close":"17:00" },
+         {"day":"thursday","open":"06:00","close":"17:00" },
+         {"day":"friday","open":"06:00","close":"17:00" },
+         {"day":"saturday","open":"08:00","close":"16:00" }
+     ],
+    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
 
 "createdAt": "now",
 "updatedAt": "now"    }
