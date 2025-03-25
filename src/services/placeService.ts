@@ -265,21 +265,21 @@ export function calculateNeighborGeohashes(centerGeohash: string, boundingBox: a
 // calc optimal precision for geohash search 
 export function calculateOptimalPrecision(boundingBox: any): number {
     // Determine which geohash precision level best matches our search radius
-    // Based on:
-    // Precision 1: ~5000km
-    // Precision 2: ~1250km
-    // Precision 3: ~156km
-    // Precision 4: ~39km
-    // Precision 5: ~5km
-    // Precision 6: ~1.2km
-    // Precision 7: ~0.15km
-    // Precision 8: ~0.04km
+    // For geospatial search, precision levels correspond roughly to:
+    // Precision 1: ~5000km (continental)
+    // Precision 2: ~1250km (country-sized)
+    // Precision 3: ~156km (region-sized)
+    // Precision 4: ~39km (city-sized)
+    // Precision 5: ~5km (neighborhood-sized)
+    // Precision 6: ~1.2km (block)
+    // Precision 7: ~0.15km (cul-de-sac)
+    // Precision 8: ~0.04km (YER HOUSE BRO)
 
     const latSpan = boundingBox.maxLat - boundingBox.minLat;
     const lngSpan = boundingBox.maxLng - boundingBox.minLng;
     const maxSpan = Math.max(latSpan, lngSpan);
 
-    if (maxSpan > 20) return 3; // >20 degrees = precision 3
+    if (maxSpan >= 10) return 3; // >= 10 degrees = precision 3
     if (maxSpan > 2.5) return 4; // >2.5 degrees = precision 4
     if (maxSpan > 0.5) return 5; // >0.5 degrees = precision 5
     if (maxSpan > 0.05) return 6; // >0.05 degrees = precision 6
