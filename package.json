@@ -21,6 +21,7 @@
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.x",
+        "@types/ngeohash": "^0.6.8",
         "@types/node": "^20.x",
         "@types/uuid": "^9.x",
         "aws-cdk-lib": "^2.x",
@@ -28,6 +29,7 @@
         "constructs": "^10.x",
         "cross-env": "^7.0.3",
         "eslint": "^8.x",
+        "ngeohash": "^0.6.3",
         "typescript": "^5.x"
     }
 }

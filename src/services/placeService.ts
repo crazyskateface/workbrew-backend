@@ -1,6 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as dynamodb from '../utils/dynamodb.js';
 import { Place, PlaceSchema } from '../models/place.js';
+import geohash from 'ngeohash';
+
+const cache = new Map<string, {data: any, timestamp: number}>();
+const CACHE_TTL = 60 * 1000; // 1 minute
 
 export async function getAllPlaces(): Promise<Place[]> {
     const items = await dynamodb.scanItems(dynamodb.PLACES_TABLE);
@@ -8,7 +12,25 @@ export async function getAllPlaces(): Promise<Place[]> {
 }
 
 export async function getPlaceById(id: string): Promise<Place | null> {
+    // check cache first
+    const cacheKey = `place:${id}`;
+    const cachedItem = cache.get(cacheKey);
+
+    if (cachedItem && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
+        return cachedItem.data as Place;
+    }
+
+
     const item = await dynamodb.getItem(dynamodb.PLACES_TABLE, { id });
+
+    // store in cache
+    if (item) {
+        cache.set(cacheKey, {
+            data: item, 
+            timestamp: Date.now()
+        });
+    }
+
     return item as Place | null;
 }
 
@@ -86,63 +108,66 @@ export async function deletePlace(id: string): Promise<boolean> {
 }
 
 export async function getPlacesNearby(lat: number, lng: number, radiusKm: number): Promise<Place[]> {
-    // step 1. calculate the geohash for the search point
-    const centerGeohash = encodeGeohash(lat, lng);
+    try {
+        // In prod, add timing metrics
+        const startTime = Date.now();
+        // step 1. calculate the geohash for the search point
+        const centerGeohash = encodeGeohash(lat, lng);
 
-    // step 2. calculate the bounding box for the search radius
-    const boundingBox = calculateBoundingBox(lat, lng, radiusKm);
+        // step 2. calculate the bounding box for the search radius
+        const boundingBox = calculateBoundingBox(lat, lng, radiusKm);
 
-    // Get relevant geohash prefixes for the area
-    // In production, we need to calculate ACTUAL neighboring cells
-    const geohashPrefixes = calculateNeighborGeohashes(centerGeohash, 5);
+        // step 3. Get relevant geohash prefixes for the area
+        // In production, we need to calculate ACTUAL neighboring cells
+        const geohashPrefixes = calculateNeighborGeohashes(centerGeohash, boundingBox);
 
-    // use the GSI to query places by geohash prefix
-    let results: Place[] = [];
+        // step 4. use the GSI to query places by geohash prefix
+        
 
-    
-
-    
-
-    // step 4. get neighbor geohashes that could contain points within our radius
-    const neighborGeohashes = getNeighborGeohashes(centerGeohash, boundingBox);
-
-    // step 5. First-pass filter - check if place's geohash has a common prefix with relevant geohashes
-    // this simulates what a spatial index would do to narrow down candidates
-    const candidatePlaces = allPlaces.filter(place => {
-        if (!place.location || !place.geohash) {
-            // calc geohash for places that dont have it (legacy data)
-            place.geohash = encodeGeohash(place.location.latitude, place.location.longitude);
-        }
-
-        // check if the place's geohash matches any of our neighbor geohashes with precision 5
-        // ( precision 5 is about 4.9km x 4.9km call size)
-        const geohashPrefix = place.geohash.substring(0, 5);
-        return neighborGeohashes.some(hash => hash.startsWith(geohashPrefix));
-    });
-
-    console.log('First-pass filter: ${candidatePlaces.length} of ${allPlaces.length} places are candidates')
-
-    // step 6. Second-pass filter - accurate distance calculation on the candidates
-    const nearbyPlaces = candidatePlaces.filter(place => {
-        if(!place.location) return false;
-
-        const distance = calculateDistance(
-            lat, lng, place.location.latitude, place.location.longitude
+        // step 5. In production, we'd use a batch of Promise.all queries for each relevant prefix
+        const prefixQueries = geohashPrefixes.map(prefix => 
+            dynamodb.queryItems(
+                dynamodb.PLACES_TABLE,
+                'begins_with(geohash, :prefix)',
+                {':prefix': prefix},
+                'geohash-index'
+            )
         );
 
-        // save the distance for later use
-        place.distance = distance;
+        const queryResults = await Promise.all(prefixQueries);
+        const results = queryResults.flat() as Place[];
 
-        return distance <= radiusKm;
-    })
+        // // step 6. Second-pass filter - accurate distance calculation on the candidates
+        const nearbyPlaces = results.filter(place => {
+            if(!place.location) return false;
 
-    // step 7. Sort by distance
-    nearbyPlaces.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    return nearbyPlaces;
+            const distance = calculateDistance(
+                lat, lng, place.location.latitude, place.location.longitude
+            );
+
+            // save the distance for later use
+            place.distance = distance;
+
+            return distance <= radiusKm;
+        })
+
+        // // step 7. Sort by distance
+        nearbyPlaces.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+
+        // Record performance metrics 
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        console.log(`Found ${nearbyPlaces.length} places in ${duration}ms`);
+
+        return nearbyPlaces;
+    } catch (err) {
+        console.error('Error fetching nearby places: ', err);
+        throw new Error(`Failed to fetch nearby places: ${err instanceof Error? err.message: 'Unknown error'}`);
+    }
     
 }
 
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number ): number {
+export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number ): number {
     const R = 6371; // Earth radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -155,7 +180,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 // calculate a bounding box given a center point and radius 
-function calculateBoundingBox(lat: number, lng: number, radiusKm: number) {
+export function calculateBoundingBox(lat: number, lng: number, radiusKm: number) {
     const latKm = 110.574; // km per degree of latitude
     const lngKm = 111.320 * Math.cos(lat * Math.PI / 180); // km per degree of longitude
 
@@ -166,70 +191,97 @@ function calculateBoundingBox(lat: number, lng: number, radiusKm: number) {
         minLat: lat - latDelta,
         maxLat: lat + latDelta,
         minLng: lng - lngDelta,
-        maxLng: lng + lngDelta
+        maxLng: lng + lngDelta,
     };
+    // return geohash.bboxes(lat - latDelta,
+    //     lat + latDelta,
+    //     lng - lngDelta,
+    //     lng + lngDelta, 9)
+    
 }
 
 // geohash encoding - simplified version
-function encodeGeohash(lat: number, lng: number, precision: number = 9): string {
-    const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-    let geohash = '';
-    let bits = 0;
-    let bitsTotal = 0;
-    let hashValue = 0;
-    let maxLat = 90;
-    let minLat = -90;
-    let maxLng = 180;
-    let minLng = -180;
-    let mid: number;
+export function encodeGeohash(lat: number, lng: number, precision: number = 9): string {
+    const hash = geohash.encode(lat, lng, precision);
+//     const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+//     let geohash = '';
+//     let bits = 0;
+//     let bitsTotal = 0;
+//     let hashValue = 0;
+//     let maxLat = 90;
+//     let minLat = -90;
+//     let maxLng = 180;
+//     let minLng = -180;
+//     let mid: number;
 
-    while (geohash.length < precision) {
-        if (bitsTotal % 2 === 0) {
-            // longitude
-            mid = (maxLng + minLng) / 2;
-            if (lng > mid) {
-                hashValue = (hashValue << 1) + 1;
-                minLng = mid;
-            }else {
-                hashValue = (hashValue << 1) + 0;
-                minLng = mid;
-            }
-        } else {
-            // latitude
-            mid = (maxLat + minLat) /2;
-            if (lat > mid) {
-                hashValue = (hashValue << 1) + 1;
-                minLat = mid;
-            } else {
-                hashValue = (hashValue << 1) + 0;
-                maxLat = mid;
-            }
-        }
+//     while (geohash.length < precision) {
+//         if (bitsTotal % 2 === 0) {
+//             // longitude
+//             mid = (maxLng + minLng) / 2;
+//             if (lng > mid) {
+//                 hashValue = (hashValue << 1) + 1;
+//                 minLng = mid;
+//             }else {
+//                 hashValue = (hashValue << 1) + 0;
+//                 minLng = mid;
+//             }
+//         } else {
+//             // latitude
+//             mid = (maxLat + minLat) /2;
+//             if (lat > mid) {
+//                 hashValue = (hashValue << 1) + 1;
+//                 minLat = mid;
+//             } else {
+//                 hashValue = (hashValue << 1) + 0;
+//                 maxLat = mid;
+//             }
+//         }
 
-        bits++;
-        bitsTotal++;
+//         bits++;
+//         bitsTotal++;
 
-        if (bits === 5) {
-            geohash += BASE32.charAt(hashValue);
-            bits = 0;
-            hashValue = 0;
-        }
-    }
+//         if (bits === 5) {
+//             geohash += BASE32.charAt(hashValue);
+//             bits = 0;
+//             hashValue = 0;
+//         }
+//     }
 
-    return geohash;
+    return hash;
 }
 
-// get neighboring peohashes based on a bounding box
-function getNeighborGeohashes(centerGeohash: string, boundingBox: any) : string[] {
-    // for simplicity we'll use the center geohash and its prefix 
-    // in a real implementation we would calculate all neighboring cells 
-    /// this simulates what a psatial database would do to find candidate cells 
+// Production-ready function to calculate neighboring geohashes
+export function calculateNeighborGeohashes(centerGeohash: string, boundingBox: any): string[] {
+    
+    const precision = calculateOptimalPrecision(boundingBox);
 
-    // use first 5 characters (precision 5 is about 4.9km x 4.9km)
-    const prefix = centerGeohash.substring(0, 5);
-
-    // return the prefix (simulating a spatial search)
-    return [prefix];
+    const truncatedHash = centerGeohash.substring(0, precision);
+    
+    const neighbors = geohash.neighbors(truncatedHash);
+    
+    return [...neighbors, truncatedHash];
 }
 
-// Production-ready function to calculate
+// calc optimal precision for geohash search 
+export function calculateOptimalPrecision(boundingBox: any): number {
+    // Determine which geohash precision level best matches our search radius
+    // Based on:
+    // Precision 1: ~5000km
+    // Precision 2: ~1250km
+    // Precision 3: ~156km
+    // Precision 4: ~39km
+    // Precision 5: ~5km
+    // Precision 6: ~1.2km
+    // Precision 7: ~0.15km
+    // Precision 8: ~0.04km
+
+    const latSpan = boundingBox.maxLat - boundingBox.minLat;
+    const lngSpan = boundingBox.maxLng - boundingBox.minLng;
+    const maxSpan = Math.max(latSpan, lngSpan);
+
+    if (maxSpan > 20) return 3; // >20 degrees = precision 3
+    if (maxSpan > 2.5) return 4; // >2.5 degrees = precision 4
+    if (maxSpan > 0.5) return 5; // >0.5 degrees = precision 5
+    if (maxSpan > 0.05) return 6; // >0.05 degrees = precision 6
+    return 7; // otherwise use precision 7
+}

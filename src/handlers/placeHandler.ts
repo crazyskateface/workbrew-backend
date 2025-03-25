@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as placeService from '../services/placeService.js';
 import { PlaceSchema } from '../models/place.js';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function getAllPlaces(): Promise<APIGatewayProxyResult> {
     try {
@@ -10,6 +11,15 @@ export async function getAllPlaces(): Promise<APIGatewayProxyResult> {
         return buildRes(200, places);
     } catch (error) {
         console.error('Error fetching places: ', error);
+
+        // Determine if this is a client or server error
+        if (error instanceof z.ZodError) {
+            return buildRes(400, 'Invalid data format', error);
+        }
+
+        // log additonal details in prod
+        const errorId = uuidv4(); // generate a unique error ID
+        console.error(`Error ID: ${errorId}`, error);
 
         return buildRes(500, 'Error fetching places', error);
     }
@@ -32,6 +42,16 @@ export async function getPlace(event: APIGatewayProxyEvent): Promise<APIGatewayP
         return buildRes(200, place);
     } catch (error) {
         console.error('Error fetching place:', error);
+
+        // Determine if this is a client or server error
+        if (error instanceof z.ZodError) {
+            return buildRes(400, 'Invalid data format', error);
+        }
+
+        // log additonal details in prod
+        const errorId = uuidv4(); // generate a unique error ID
+        console.error(`Error ID: ${errorId}`, error);
+
         return buildRes(500, 'Error fetching place', error);
     }
 }
@@ -59,6 +79,16 @@ export async function createPlace(event: APIGatewayProxyEvent): Promise<APIGatew
         }
     } catch (error) {
         console.error('Error creating place: ' , error);
+
+        // Determine if this is a client or server error
+        if (error instanceof z.ZodError) {
+            return buildRes(400, 'Invalid data format', error);
+        }
+
+        // log additonal details in prod
+        const errorId = uuidv4(); // generate a unique error ID
+        console.error(`Error ID: ${errorId}`, error);
+        
         return buildRes(500, 'Error creating place', error);
     }
 }
