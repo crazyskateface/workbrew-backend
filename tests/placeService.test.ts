@@ -201,7 +201,14 @@ describe("PlaceService Tests", () => {
     it("should update a place correctly", async () => {
         const updateData = {
             name: "Updated Place Name",
-            amenities: { wifi: false }
+            amenities: { 
+                wifi: false,
+                coffee: true, 
+                outlets: true, 
+                seating: true, 
+                food: false, 
+                meetingRooms: false 
+            }
         };
 
         const updated = await updatePlace("test-id", updateData);
@@ -223,15 +230,14 @@ describe("PlaceService Tests", () => {
     });
 
     // error handling tests
-    it("should handle errors in getPlacesNearby graacefully", async => {
+    it("should handle errors in getPlacesNearby graacefully", async () => {
         // force an error
         mock.module("../src/utils/dynamodb.js", () => ({
             queryItems: () => Promise.reject(new Error("Simulated error"))
         }));
+
         await expect(getPlacesNearby(37.7749, -122.4194, 10))
             .rejects
             .toThrow("Failed to fetch nearby places");
-    })
-
-
+    });
 });
