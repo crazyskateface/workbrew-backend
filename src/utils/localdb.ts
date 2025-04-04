@@ -1,9 +1,15 @@
 // Simple in-memory database for local development
 import { v4 as uuidv4 } from 'uuid';
 import localdata from './local-data.json' with { type: "json" };
+import { encodeGeohash } from '../services/placeService.js';
 
 class LocalDatabase {
     private storage: Map<string, Map<string, any>> = new Map();
+
+    async clearAll(): Promise<void> {
+        this.storage = new Map();
+        console.log('[LocalDB].. All data cleared');
+    }
 
     // init a table if it doesn't exist
     private ensureTable(tableName: string): Map<string, any> {
@@ -19,8 +25,47 @@ class LocalDatabase {
         if (!item.id) {
             throw new Error('Item must have an id field');
         }
+        // If this is a place item with location but missing geohash, add it
+        if (tableName === 'workbrew-places' && 
+            item.location?.latitude !== undefined && 
+            item.location?.longitude !== undefined) {
+            
+            // Only generate if not already provided
+            if (!item.geohash) {
+                item.geohash = encodeGeohash(item.location.latitude, item.location.longitude);
+            }
+            
+            // Only generate if not already provided
+            if (!item.geohashPrefix) {
+                item.geohashPrefix = item.geohash.substring(0, 4);
+            }
+        }
         table.set(item.id, { ...item });
         console.log(`[LocalDB] Added item to ${tableName}:`, item.id);
+    }
+
+    // You could also add an updateItem method that preserves geohashes
+    async updateItem(tableName: string, key: Record<string, any>, updates: Record<string, any>): Promise<Record<string, any> | null> {
+        const item = await this.getItem(tableName, key);
+        if (!item) {
+            return null;
+        }
+        
+        // Create updated item
+        const updatedItem: Record<string, any> = { ...item, ...updates, updatedAt: new Date().toISOString() };
+        
+        // If location was updated, recalculate geohashes
+        if (updates.location && 
+            (updates.location.latitude !== item.location?.latitude || 
+             updates.location.longitude !== item.location?.longitude)) {
+            
+            updatedItem.geohash = encodeGeohash(updatedItem.location.latitude, updatedItem.location.longitude);
+            updatedItem.geohashPrefix = updatedItem.geohash.substring(0, 4);
+        }
+        
+        // Save updated item
+        await this.putItem(tableName, updatedItem);
+        return updatedItem;
     }
 
     // get an item from a table
@@ -69,10 +114,13 @@ class LocalDatabase {
 
         for (const place of localdata) {
             const id = uuidv4();
-            place.id = id;
-            place.createdAt = now;
-            place.updatedAt = now;
-            await this.putItem(placesTable, place);
+            const placeWithId = { 
+                ...place, 
+                id, 
+                createdAt: now, 
+                updatedAt: now 
+            };
+            await this.putItem(placesTable, placeWithId);
 
         }
         console.log('[LocalDB] Sample data initialization complete');
@@ -85,10 +133,13 @@ export const localDb = new LocalDatabase();
 
 // initialize with sample data when the module is loaded
 const initializeData = async () => {
-    try {
-        await localDb.initializeWithSampleData();
-    } catch (err) {
-        console.error('[LocalDB] Error initializing sample data:', err);
+    // only in development
+    if (process.env.NODE_ENV !== 'production') {
+        try {
+            await localDb.initializeWithSampleData();
+        } catch (err) {
+            console.error('[LocalDB] Error initializing sample data:', err);
+        }
     }
 };
 

@@ -1,47 +1,7 @@
 [
+    
     {
-       "id":"<generate_id>",
-       "name":"Coffee House Downtown",
-       "description":"A cozy coffee shop with fast WiFi and plenty of seating.",
-       "address":"123 Main St, Anytown, USA",
-       "location":{
-           "latitude":37.7749,
-           "longitude":-122.4194
-        },
-       "amenities":{
-           "wifi":true,
-           "coffee":true,
-           "outlets":true,
-           "seating":true,
-           "food":true,
-           "workspace":true,
-           "meetingRooms":false,
-           "parking":false
-        },
-       "attributes":{
-           "noiseLevel":"moderate",
-           "rating":4.5,
-           "openLate":false,
-           "parking": "lot",
-           "capacity": "medium",
-           "seatingComfort": 4,
-           "coffeeRating": 5
-        },
-       "openingHours":[
-            {"day":"monday","open":"07:00","close":"20:00" },
-            {"day":"tuesday","open":"07:00","close":"20:00" },
-            {"day":"wednesday","open":"07:00","close":"20:00" },
-            {"day":"thursday","open":"07:00","close":"20:00" },
-            {"day":"friday","open":"07:00","close":"22:00" },
-            {"day":"saturday","open":"08:00","close":"22:00" },
-            {"day":"sunday","open":"08:00","close":"18:00" }
-        ],
-       "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
-
-"createdAt": "now",
-"updatedAt": "now"    },
-    {
-       "id":"<generate_id>",
+       
        "name":"The Coffee Peddlar",
        "description":"Coffee shop in a historic small town district with a warm atmosphere and plenty of seating.",
        "address":"112 Harrison Ave, Harrison, OH, 45030, USA",
@@ -75,14 +35,14 @@
             {"day":"thursday","open":"07:00","close":"18:00" },
             {"day":"friday","open":"07:00","close":"17:00" },
             {"day":"saturday","open":"08:00","close":"16:00" }
-        ],
-       "photos":["library-1.jpg"],
+        ]
+       
 
-"createdAt": "now",
-"updatedAt": "now"    },
+
+    },
   
 {
-    "id":"<generate_id>",
+    
     "name":"Starbucks",
     "description":"Seattle-based coffeehouse chain known for its signature roasts, light bites, and WiFi availability.",
     "address":"10894 New Haven Rd., Harrison, OH, 45030, USA",
@@ -117,14 +77,14 @@
          {"day":"friday","open":"04:30","close":"21:00" },
          {"day":"saturday","open":"05:30","close":"21:00" },
          {"day":"sunday","open":"05:30","close":"21:00" }
-     ],
-    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+     ]
+    
 
-"createdAt": "now",
-"updatedAt": "now"    },
+
+    },
 
 {
-    "id":"<generate_id>",
+    
     "name":"Square Mile Coffee Company",
     "description":"Local coffee shop featuring innovative seasonal drinks, homemade pastries, and comfortable seating.",
     "address":"7420 Hamilton Ave, Mt. Healthy, OH, 45231, USA",
@@ -158,14 +118,14 @@
          {"day":"friday","open":"06:00","close":"15:00" },
          {"day":"saturday","open":"06:00","close":"15:00" },
          {"day":"sunday","open":"06:00","close":"15:00" }
-     ],
-    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+     ]
+    
 
-"createdAt": "now",
-"updatedAt": "now"    },
+
+    },
 
 {
-    "id":"<generate_id>",
+    
     "name":"White Oak Coffee House",
     "description":"A cozy coffee shop with great coffee and local baked goods.",
     "address":"5935 Cheviot Rd, Cincinnati, OH, 45247, USA",
@@ -199,14 +159,14 @@
          {"day":"thursday","open":"06:30","close":"14:00" },
          {"day":"friday","open":"06:30","close":"17:00" },
          {"day":"saturday","open":"07:30","close":"14:00" }
-     ],
-    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+     ]
+    
 
-"createdAt": "now",
-"updatedAt": "now"    },
+
+    },
 
 {
-    "id":"<generate_id>",
+    
     "name":"Starbucks",
     "description":"Seattle-based coffeehouse chain known for its signature roasts, light bites, and WiFi availability.",
     "address":"9911 Colerain Ave, Cincinnati, OH, 45251, USA",
@@ -241,14 +201,14 @@
          {"day":"friday","open":"04:30","close":"21:00" },
          {"day":"saturday","open":"05:00","close":"21:00" },
          {"day":"sunday","open":"05:00","close":"21:00" }
-     ],
-    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+     ]
+    
 
-"createdAt": "now",
-"updatedAt": "now"    },
+
+    },
 
 {
-    "id":"<generate_id>",
+    
     "name":"Shepherd's Ground Coffee Shop",
     "description":"A quaint coffee shop in a converted house.",
     "address":"4190 Hamilton Cleves Rd, Fairfield, OH, 45014, USA",
@@ -282,9 +242,9 @@
          {"day":"thursday","open":"06:00","close":"17:00" },
          {"day":"friday","open":"06:00","close":"17:00" },
          {"day":"saturday","open":"08:00","close":"16:00" }
-     ],
-    "photos":["coffee-house-1.jpg", "coffee-house-2.jpg"],
+     ]
+    
 
-"createdAt": "now",
-"updatedAt": "now"    }
+
+    }
 ]

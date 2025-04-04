@@ -47,6 +47,8 @@ export async function createPlace(placeData: Omit<Place, 'id' | 'createdAt' | 'u
     // calculate geohash for the place
     if (newPlace.location) {
         newPlace.geohash = encodeGeohash(newPlace.location.latitude, newPlace.location.longitude);
+        // store multiple prefix lengths for different query precision
+        newPlace.geohashPrefix = newPlace.geohash.substring(0, 4); // adjust length as needed
     }
 
     //validate the place data
@@ -75,6 +77,8 @@ export async function updatePlace(id: string, placeData: Partial<Place>): Promis
             updatedPlace.location.latitude,
             updatedPlace.location.longitude
         );
+        // store multiple prefix lengths for different query precision
+        updatedPlace.geohashPrefix = updatedPlace.geohash.substring(0, 4); // adjust length as needed
     }
 
     // Merge updated attributes and amenities
@@ -122,15 +126,20 @@ export async function getPlacesNearby(lat: number, lng: number, radiusKm: number
         const geohashPrefixes = calculateNeighborGeohashes(centerGeohash, boundingBox);
 
         // step 4. use the GSI to query places by geohash prefix
-        
+        console.log("[getPlacesNearby].. geohash prefix: ", geohashPrefixes)
+
+        //de-deuplicate 4-character prefixes before querying
+        const uniquePrefixes = [...new Set(geohashPrefixes.map(prefix => 
+            prefix.substring(0, 4)
+        ))];
 
         // step 5. In production, we'd use a batch of Promise.all queries for each relevant prefix
-        const prefixQueries = geohashPrefixes.map(prefix => 
+        const prefixQueries = uniquePrefixes.map(prefix => 
             dynamodb.queryItems(
                 dynamodb.PLACES_TABLE,
-                'begins_with(geohash, :prefix)',
+                'geohashPrefix = :prefix',
                 {':prefix': prefix},
-                'geohash-index'
+                'geohash-prefix-index'
             )
         );
 

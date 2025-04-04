@@ -5,9 +5,11 @@
     "type": "module",
     "scripts": {
         "dev": "cross-env NODE_ENV=development bun run --watch src/local-server.ts",
+        "build": "tsc -p tsconfig.json && cp lambda-package.json dist/package.json && cd dist && npm install",
         "test": "bun test",
         "test-db": "cross-env NODE_ENV=development bun run tests/test-db.ts",
         "deploy": "cd infra && bun run cdk deploy",
+        "bnd": "bun test && bun run build && bun run deploy",
         "lint": "eslint . --ext .ts"
     },
     "dependencies": {

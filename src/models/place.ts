@@ -11,6 +11,7 @@ export const PlaceSchema = z.object({
         longitude: z.number(),
     }),
     geohash: z.string().optional(),
+    geohashPrefix: z.string().optional(),
     distance: z.number().optional(), // for storing calculated distance
     amenities: z.object({
         wifi: z.boolean().default(false),

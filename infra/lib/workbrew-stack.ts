@@ -20,9 +20,25 @@ export class WorkbrewStack extends cdk.Stack {
         });
 
         // Create a GSI for location-based queries
+        // placesTable.addGlobalSecondaryIndex({
+        //     indexName: 'geohash-prefix-index',
+        //     partitionKey: { name: 'geohashPrefix', type: dynamodb.AttributeType.STRING },
+        //     sortKey: {name: 'geohash', type: dynamodb.AttributeType.STRING },
+        //     projectionType: dynamodb.ProjectionType.ALL,
+        // });
+
+        // First keep both indexes
+        // placesTable.addGlobalSecondaryIndex({
+        //     indexName: 'geohash-index',  // Keep the old one
+        //     partitionKey: { name: 'geohash', type: dynamodb.AttributeType.STRING },
+        //     projectionType: dynamodb.ProjectionType.ALL,
+        // });
+
+        // Add the new one
         placesTable.addGlobalSecondaryIndex({
-            indexName: 'geohash-index',
-            partitionKey: { name: 'geohash', type: dynamodb.AttributeType.STRING },
+            indexName: 'geohash-prefix-index',
+            partitionKey: { name: 'geohashPrefix', type: dynamodb.AttributeType.STRING },
+            sortKey: {name: 'geohash', type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.ALL,
         });
 
@@ -43,36 +59,52 @@ export class WorkbrewStack extends cdk.Stack {
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
         });
 
+        console.log(path.join(__dirname, '../../dist'));
+
         // Lambda functions
-        const getAllPlacesFunction = new NodejsFunction(this, 'GetAllPlacesFunction', {
+        const getAllPlacesFunction = new lambda.Function(this, 'GetAllPlacesFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
-            handler: 'getAllPlaces',
-            entry: path.join(__dirname, '../../src/handlers/places.ts'),
+            handler: 'index.getAllPlaces',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
             environment: {
                 PLACES_TABLE: placesTable.tableName,
-            },
+                NODE_ENV: 'production'
+            }
         });
 
-        const getPlaceFunction = new NodejsFunction(this, 'GetPlaceFunction', {
+        const getPlacesNearbyFunction = new lambda.Function(this, 'GetPlacesNearbyFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
-            handler: 'getPlace',
-            entry: path.join(__dirname, '../../src/handlers/places.ts'),
+            handler: 'index.getPlacesNearby',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
             environment: {
                 PLACES_TABLE: placesTable.tableName,
-            },
+                NODE_ENV: 'production'
+            }
         });
 
-        const createPlaceFunction = new NodejsFunction(this, 'CreatePlaceFunction', {
+        const getPlaceFunction = new lambda.Function(this, 'GetPlaceFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
-            handler: 'createPlace',
-            entry: path.join(__dirname, '../../src/handlers/places.ts'),
+            handler: 'index.getPlace',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
             environment: {
                 PLACES_TABLE: placesTable.tableName,
-            },
+                NODE_ENV: 'production'
+            }
+        });
+
+        const createPlaceFunction = new lambda.Function(this, 'CreatePlaceFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.createPlace',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                PLACES_TABLE: placesTable.tableName,
+                NODE_ENV: 'production'
+            }
         });
 
         // grant permissions
         placesTable.grantReadData(getAllPlacesFunction);
+        placesTable.grantReadData(getPlacesNearbyFunction);
         placesTable.grantReadData(getPlaceFunction);
         placesTable.grantWriteData(createPlaceFunction);
 
@@ -95,6 +127,9 @@ export class WorkbrewStack extends cdk.Stack {
 
         const placeResource = placesResource.addResource('{id}');
         placeResource.addMethod('GET', new apigateway.LambdaIntegration(getPlaceFunction));
+
+        const placesNearbyResource = placesResource.addResource('nearby')
+        placesNearbyResource.addMethod('GET', new apigateway.LambdaIntegration(getPlacesNearbyFunction));
 
         // outputs
         new cdk.CfnOutput(this, 'ApiEndpoint', {
