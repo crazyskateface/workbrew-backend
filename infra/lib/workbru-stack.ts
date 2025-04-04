@@ -8,7 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as path from 'path';
 
-export class WorkbrewStack extends cdk.Stack {
+export class WorkbruStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
@@ -43,7 +43,7 @@ export class WorkbrewStack extends cdk.Stack {
         });
 
         // S3 bucket for photos and other assets
-        const assetsBucket = new s3.Bucket(this, 'WorkbrewAssets', {
+        const assetsBucket = new s3.Bucket(this, 'WorkbruAssets', {
             cors: [
                 {
                     allowedMethods: [
@@ -109,8 +109,8 @@ export class WorkbrewStack extends cdk.Stack {
         placesTable.grantWriteData(createPlaceFunction);
 
         // API Gateway
-        const api = new apigateway.RestApi(this, 'WorkbrewApi', {
-            restApiName: 'Workbrew API', 
+        const api = new apigateway.RestApi(this, 'WorkbruApi', {
+            restApiName: 'Workbru API', 
             deployOptions: {
                 stageName: 'v1',
             },

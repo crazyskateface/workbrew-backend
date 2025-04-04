@@ -9,7 +9,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { localDb } from './localdb.js';
 
-export const PLACES_TABLE = process.env.PLACES_TABLE || 'workbrew-places';
+export const PLACES_TABLE = process.env.PLACES_TABLE || 'workbru-places';
 
 // Environmet detection
 const isLocalDev = process.env.NODE_ENV !== 'production';

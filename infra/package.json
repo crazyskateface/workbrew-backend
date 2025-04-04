@@ -1,5 +1,5 @@
 {
-  "name": "workbrew-stack",
+  "name": "workbru-stack",
   "version": "0.1.0",
   "bin": {
     "app": "bin/app.js"

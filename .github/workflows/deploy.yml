@@ -38,4 +38,4 @@ jobs:
           run: |
             cd infra
             bun install
-            bun run cdk deploy --require-approval never
+            bun run cdk deploy WorkbruStack --require-approval never

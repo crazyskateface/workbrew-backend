@@ -33,7 +33,7 @@ describe("PlaceService Tests", () => {
         // clear existing data
         await localDb.clearAll();
 
-        await localDb.putItem("workbrew-places", {
+        await localDb.putItem("workbru-places", {
             id: "123e4567-e89b-12d3-a456-426614174000",
             name: "Test Place",
             address: "123 Test St",
@@ -52,7 +52,7 @@ describe("PlaceService Tests", () => {
 
         // add enriched data
         for (const place of enrichedData) {
-            await localDb.putItem("workbrew-places", place);
+            await localDb.putItem("workbru-places", place);
         }
         // Mock dynamodb functions
         mock.module("../src/utils/dynamodb.js", () => ({
@@ -60,7 +60,7 @@ describe("PlaceService Tests", () => {
             getItem: (table, key) => localDb.getItem(table, key),
             queryItems: (tableName, keyConditionExpression, expressionValues, indexName) => {
                 // For specific geohash queries, implement them based on the data in localDb
-                if (tableName === "workbrew-places" && 
+                if (tableName === "workbru-places" && 
                     keyConditionExpression === "geohashPrefix = :prefix") {
 
                     const prefix = expressionValues[':prefix'];
@@ -98,7 +98,7 @@ describe("PlaceService Tests", () => {
             deleteItem: (tableName, key) => localDb.deleteItem(tableName, key)
                 .then(() => true)
                 .catch(() => false),
-            PLACES_TABLE: "workbrew-places"
+            PLACES_TABLE: "workbru-places"
         }));
     });
 
@@ -224,7 +224,7 @@ describe("PlaceService Tests", () => {
                 await localDb.clearAll();
                 
                 // Re-add the test place
-                await localDb.putItem("workbrew-places", {
+                await localDb.putItem("workbru-places", {
                     id: "123e4567-e89b-12d3-a456-426614174000",
                     name: "Test Place",
                     address: "123 Test St",
@@ -243,7 +243,7 @@ describe("PlaceService Tests", () => {
                 
                 // Re-add enriched data
                 for (const place of enrichedData) {
-                    await localDb.putItem("workbrew-places", place);
+                    await localDb.putItem("workbru-places", place);
                 }
             }
         });
@@ -291,7 +291,7 @@ describe("PlaceService Tests", () => {
             const callArgs = spy.mock.calls[0];
 
             // check correct table name was used
-            expect(callArgs[0]).toBe("workbrew-places");
+            expect(callArgs[0]).toBe("workbru-places");
 
             // check the key condition contains geohashPrefix
             expect(callArgs[1]).toBe("geohashPrefix = :prefix");

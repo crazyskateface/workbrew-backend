@@ -26,7 +26,7 @@ class LocalDatabase {
             throw new Error('Item must have an id field');
         }
         // If this is a place item with location but missing geohash, add it
-        if (tableName === 'workbrew-places' && 
+        if (tableName === 'workbru-places' && 
             item.location?.latitude !== undefined && 
             item.location?.longitude !== undefined) {
             
@@ -109,7 +109,7 @@ class LocalDatabase {
 
     // load sample data 
     async initializeWithSampleData(): Promise<void> {
-        const placesTable = 'workbrew-places';
+        const placesTable = 'workbru-places';
         const now = new Date().toISOString();
 
         for (const place of localdata) {

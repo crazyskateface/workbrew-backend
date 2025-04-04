@@ -1,7 +1,7 @@
 {
-    "name": "workbrew-backend-lambda",
+    "name": "workbru-backend-lambda",
     "version": "0.1.0",
-    "description": "Lambda functions for Workbrew Backend",
+    "description": "Lambda functions for Workbru Backend",
     "type": "module",
     "dependencies": {
       "zod": "^3.x",
