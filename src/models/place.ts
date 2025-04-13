@@ -43,6 +43,9 @@ export const PlaceSchema = z.object({
     googlePlaceId: z.string().optional(),
     createdAt: z.string().datetime().optional(),
     updatedAt: z.string().datetime().optional(),
+    createdBy: z.string().optional(), // User ID of creator
+    isPublic: z.boolean().default(true),
+
 });
 
 export type Place = z.infer<typeof PlaceSchema>;

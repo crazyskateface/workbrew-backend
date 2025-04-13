@@ -5,6 +5,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cognito from 'aws-cdk-lib/aws-cognito'; 
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as path from 'path';
 
@@ -59,6 +60,49 @@ export class WorkbruStack extends cdk.Stack {
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
         });
 
+        // cognito user pools 
+        const userPool = new cognito.UserPool(this, 'WorkbruUserPool', {
+            selfSignUpEnabled: true,
+            autoVerify: { email: true },
+            standardAttributes: {
+                email: {
+                    required: true,
+                    mutable: true,
+                },
+                givenName: {
+                    required: true,
+                    mutable: true,
+                },
+            },
+            customAttributes: {
+                isAdmin: new cognito.StringAttribute({ mutable: true}), // custom attr for admin
+            },
+            passwordPolicy: {
+                minLength: 8,
+                requireLowercase: true,
+                requireUppercase: true,
+                requireDigits: true,
+                requireSymbols: false,
+            },
+            accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+        });
+
+        // create a user pool client
+        const userPoolClient = new cognito.UserPoolClient(this, 'WorkbruUserPoolClient', {
+            userPool,
+            authFlows: {
+                userPassword: true,
+                userSrp: true,
+            },
+            generateSecret: false,
+        });
+
+        // create a cognito authorizer for api gateway
+        const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'WorkbruAuthorizer', {
+            cognitoUserPools: [userPool],
+        });
+
         console.log(path.join(__dirname, '../../dist'));
 
         // Lambda functions
@@ -102,11 +146,110 @@ export class WorkbruStack extends cdk.Stack {
             }
         });
 
+        const updatePlaceFunction = new lambda.Function(this, 'UpdatePlaceFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.updatePlace',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                PLACES_TABLE: placesTable.tableName,
+                NODE_ENV: 'production'
+            }
+        });
+
+        const deletePlaceFunction = new lambda.Function(this, 'DeletePlaceFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.deletePlace',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                PLACES_TABLE: placesTable.tableName,
+                NODE_ENV: 'production'
+            }
+        });
+
+        // lambda functions for user management
+        const getUserFunction = new lambda.Function(this, 'GetUserFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.getUser',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        })
+
+        const updateUserFunction = new lambda.Function(this, 'UpdateUserFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.updateUser',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        })
+
+        const setAdminStatusFunction = new lambda.Function(this, 'SetAdminStatusFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.setAdminStatus',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        })
+
+        const validateAdminFunction = new lambda.Function(this, 'ValidateAdminFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.validateAdmin',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        })
+
+        // Create a function for getCurrentSession
+        const getCurrentSessionFunction = new lambda.Function(this, 'GetCurrentSessionFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.getCurrentSession',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        });
+
         // grant permissions
         placesTable.grantReadData(getAllPlacesFunction);
         placesTable.grantReadData(getPlacesNearbyFunction);
         placesTable.grantReadData(getPlaceFunction);
+        placesTable.grantReadWriteData(updatePlaceFunction);
+        placesTable.grantReadWriteData(deletePlaceFunction);
         placesTable.grantWriteData(createPlaceFunction);
+
+        // For the getCurrentSessionFunction
+        userPool.grant(getCurrentSessionFunction, 'cognito-idp:AdminGetUser');
+        userPool.grant(getCurrentSessionFunction, 'cognito-idp:ListUsers');
+
+        // You also need to add it to any other functions that use getUserByIdOrUsername
+        userPool.grant(getUserFunction, 'cognito-idp:AdminGetUser');
+        userPool.grant(getUserFunction, 'cognito-idp:ListUsers');
+
+        userPool.grant(updateUserFunction, 'cognito-idp:AdminGetUser'); 
+        userPool.grant(updateUserFunction, 'cognito-idp:AdminUpdateUserAttributes');
+        userPool.grant(updateUserFunction, 'cognito-idp:ListUsers');
+
+        userPool.grant(setAdminStatusFunction, 'cognito-idp:AdminGetUser');
+        userPool.grant(setAdminStatusFunction, 'cognito-idp:AdminUpdateUserAttributes');
+        userPool.grant(setAdminStatusFunction, 'cognito-idp:ListUsers');
+
+        userPool.grant(validateAdminFunction, 'cognito-idp:AdminGetUser');
+        userPool.grant(validateAdminFunction, 'cognito-idp:ListUsers');
+        
 
         // API Gateway
         const api = new apigateway.RestApi(this, 'WorkbruApi', {
@@ -123,13 +266,58 @@ export class WorkbruStack extends cdk.Stack {
         // API resources and methods
         const placesResource = api.root.addResource('places');
         placesResource.addMethod('GET', new apigateway.LambdaIntegration(getAllPlacesFunction));
-        placesResource.addMethod('POST', new apigateway.LambdaIntegration(createPlaceFunction));
+        placesResource.addMethod('POST', new apigateway.LambdaIntegration(createPlaceFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
+        
 
         const placeResource = placesResource.addResource('{id}');
         placeResource.addMethod('GET', new apigateway.LambdaIntegration(getPlaceFunction));
+        placeResource.addMethod('PUT', new apigateway.LambdaIntegration(updatePlaceFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
+        placeResource.addMethod('DELETE', new apigateway.LambdaIntegration(deletePlaceFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
 
         const placesNearbyResource = placesResource.addResource('nearby')
         placesNearbyResource.addMethod('GET', new apigateway.LambdaIntegration(getPlacesNearbyFunction));
+
+        // api endpoints for user management
+        const usersResource = api.root.addResource('users');
+        const userResource = usersResource.addResource('{userId}');
+
+        userResource.addMethod('GET', new apigateway.LambdaIntegration(getUserFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
+
+        userResource.addMethod('PUT', new apigateway.LambdaIntegration(updateUserFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
+
+        const adminResource = usersResource.addResource('admin');
+        adminResource.addMethod('PUT', new apigateway.LambdaIntegration(setAdminStatusFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
+
+        const adminValidateResource = adminResource.addResource('validate');
+        adminValidateResource.addMethod('GET', new apigateway.LambdaIntegration(validateAdminFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
+
+        // Add session endpoint
+        const sessionResource = usersResource.addResource('session');
+        sessionResource.addMethod('GET', new apigateway.LambdaIntegration(getCurrentSessionFunction), {
+            authorizer,
+            authorizationType: apigateway.AuthorizationType.COGNITO,
+        });
 
         // outputs
         new cdk.CfnOutput(this, 'ApiEndpoint', {
@@ -145,6 +333,16 @@ export class WorkbruStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'AssetsBucketName', {
             value: assetsBucket.bucketName,
             description: 'S3 bucket for assets',
+        });
+
+        new cdk.CfnOutput(this, 'UserPoolId', {
+            value: userPool.userPoolId,
+            description: 'Cognito User Pool ID',
+        });
+
+        new cdk.CfnOutput(this, 'UserpoolClientId', {
+            value: userPoolClient.userPoolClientId,
+            description: 'Cognito User Pool Client ID',
         });
 
     }

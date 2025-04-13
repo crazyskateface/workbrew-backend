@@ -17,6 +17,7 @@ export async function getPlaceById(id: string): Promise<Place | null> {
     const cachedItem = cache.get(cacheKey);
 
     if (cachedItem && (Date.now() - cachedItem.timestamp < CACHE_TTL)) {
+        console.log(`[Cache] Retrieved item from cache: ${id}`);
         return cachedItem.data as Place;
     }
 
@@ -34,7 +35,7 @@ export async function getPlaceById(id: string): Promise<Place | null> {
     return item as Place | null;
 }
 
-export async function createPlace(placeData: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> {
+export async function createPlace(placeData: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>, userId?: string): Promise<Place> {
     const now = new Date().toISOString();
 
     const newPlace: Place = {
@@ -42,6 +43,7 @@ export async function createPlace(placeData: Omit<Place, 'id' | 'createdAt' | 'u
         id: uuidv4(),
         createdAt: now,
         updatedAt: now,
+        createdBy: userId // Add the creator's ID
     };
 
     // calculate geohash for the place
@@ -58,24 +60,27 @@ export async function createPlace(placeData: Omit<Place, 'id' | 'createdAt' | 'u
     return newPlace;
 }
 
-export async function updatePlace(id: string, placeData: Partial<Place>): Promise<Place | null> {
+export async function updatePlace(id: string, placeData: Partial<Place>, userId?: string): Promise<Place | null> {
     const existingPlace = await getPlaceById(id);
 
     if (!existingPlace) {
         return null;
     }
 
+    const now = new Date().toISOString();
+
     const updatedPlace: Place = {
         ...existingPlace,
         ...placeData,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
+        createdBy: userId,
     };
-
+    
     // recalc geohash if location updated
     if (placeData.location) {
         updatedPlace.geohash = encodeGeohash(
-            updatedPlace.location.latitude,
-            updatedPlace.location.longitude
+            placeData.location.latitude,
+            placeData.location.longitude
         );
         // store multiple prefix lengths for different query precision
         updatedPlace.geohashPrefix = updatedPlace.geohash.substring(0, 4); // adjust length as needed
@@ -84,19 +89,29 @@ export async function updatePlace(id: string, placeData: Partial<Place>): Promis
     // Merge updated attributes and amenities
     updatedPlace.amenities = {
         ...existingPlace.amenities,
-        ...placeData.amenities,
+        ...(placeData.amenities || {}),
     };
 
     updatedPlace.attributes = {
         ...existingPlace.attributes,
-        ...placeData.attributes,
+        ...(placeData.attributes || {}),
     };
 
     // Validate the updated place data
     PlaceSchema.parse(updatedPlace);
 
-    await dynamodb.putItem(dynamodb.PLACES_TABLE, updatedPlace);
-    return updatedPlace;
+    // clear the cache 
+    const cacheKey = `place:${id}`;
+    cache.delete(cacheKey);
+    console.log(`[Cache] Cleared cache for cacheKey: ${cacheKey}`);
+
+    await dynamodb.updateFields(
+        dynamodb.PLACES_TABLE,
+        { id },
+        updatedPlace
+    )
+
+    return getPlaceById(id);
 }
 
 export async function deletePlace(id: string): Promise<boolean> {

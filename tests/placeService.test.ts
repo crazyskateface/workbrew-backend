@@ -14,6 +14,8 @@ import {
 import * as dynamodb from "../src/utils/dynamodb.js";
 import localData from "../src/utils/local-data.json" with { type: "json"};
 import { localDb } from "../src/utils/localdb.js";
+import { Place } from "../src/models/place.js";
+
 
 
 describe("PlaceService Tests", () => {
@@ -98,6 +100,13 @@ describe("PlaceService Tests", () => {
             deleteItem: (tableName, key) => localDb.deleteItem(tableName, key)
                 .then(() => true)
                 .catch(() => false),
+            updateFields: (tableName, key, fields) => {
+                return localDb.getItem(tableName, key).then(item => {
+                    if (!item) return null;
+                    const updatedItem = { ...item, ...fields };
+                    return localDb.putItem(tableName, updatedItem).then(() => updatedItem);
+                });
+            },
             PLACES_TABLE: "workbru-places"
         }));
     });
@@ -249,6 +258,7 @@ describe("PlaceService Tests", () => {
         });
         // CRUD tests 
         it("should create a place with correct data and geohash", async () => {
+            const userId = "test-user-id";
             const placeData = {
                 name: "New Coffee Shop",
                 address: "456 Coffee St",
@@ -265,9 +275,12 @@ describe("PlaceService Tests", () => {
                     noiseLevel: "moderate" as const,
                     parking: "street" as const,
                     openLate: false
-                }
+                },
+                description: "A new coffee shop",
+                openingHours: [],
+                isPublic: true
             };
-            const newPlace = await createPlace(placeData);
+            const newPlace = await createPlace(placeData, userId);
 
             expect(newPlace.id).toBeDefined();
             expect(newPlace.name).toBe(placeData.name);
@@ -275,6 +288,7 @@ describe("PlaceService Tests", () => {
             expect(newPlace.geohashPrefix).toBe(encodeGeohash(38.7749, -132.4194).substring(0, 4));
             expect(newPlace.createdAt).toBeDefined();
             expect(newPlace.updatedAt).toBeDefined();
+            expect(newPlace.createdBy).toBe(userId);
         });
 
         it("should query places by geohash prefix", async () => {
@@ -316,6 +330,7 @@ describe("PlaceService Tests", () => {
         });
 
         it("should update a place correctly", async () => {
+            const userId = "test-user-id";
             const updateData = {
                 name: "Updated Place Name",
                 amenities: { 
@@ -328,14 +343,111 @@ describe("PlaceService Tests", () => {
                 }
             };
 
-            const updated = await updatePlace("123e4567-e89b-12d3-a456-426614174000", updateData);
+            const updated = await updatePlace("123e4567-e89b-12d3-a456-426614174000", updateData, userId);
 
             expect(updated).not.toBeNull();
             expect(updated?.name).toBe(updateData.name);
             expect(updated?.amenities.wifi).toBe(false);
+            expect(updated?.createdBy).toBe(userId);
             // original data should be preserved
             expect(updated?.address).toBe("123 Test St");
         })
+
+        it("should recalculate geohash when location is updated", async () => {
+            const newLocation = { latitude: 40.7128, longitude: -74.0060 }; // NYC coordinates
+            const updateData = {
+                location: newLocation
+            };
+    
+            const updated = await updatePlace("123e4567-e89b-12d3-a456-426614174000", updateData);
+    
+            expect(updated).not.toBeNull();
+            expect(updated?.location).toEqual(newLocation);
+            // Verify geohash was recalculated
+            expect(updated?.geohash).toBe(encodeGeohash(newLocation.latitude, newLocation.longitude));
+            expect(updated?.geohashPrefix).toBe(encodeGeohash(newLocation.latitude, newLocation.longitude).substring(0, 4));
+        });
+    
+        it("should properly merge nested objects like attributes", async () => {
+            const updateData = {
+                attributes: {
+                    noiseLevel: "quiet" as const  // updating just one attribute
+                }
+            } as Partial<Place>;
+    
+            const updated = await updatePlace("123e4567-e89b-12d3-a456-426614174000", updateData);
+    
+            expect(updated).not.toBeNull();
+            expect(updated?.attributes.noiseLevel).toBe("quiet");
+            // Original attributes should still be present
+            expect(updated?.attributes.openLate).toBe(true);
+            expect(updated?.attributes.rating).toBe(3.0);
+        });
+    
+        it("should return null when updating non-existent place", async () => {
+            const updateData = {
+                name: "This place doesn't exist"
+            };
+    
+            const result = await updatePlace("non-existent-id", updateData);
+    
+            expect(result).toBeNull();
+        });
+    
+        it("should call dynamodb.updateFields with correct parameters", async () => {
+            const spy = spyOn(dynamodb, "updateFields");
+            const updateData = {
+                name: "Updated via Spy"
+            };
+    
+            await updatePlace("123e4567-e89b-12d3-a456-426614174000", updateData);
+            
+            expect(spy).toHaveBeenCalledTimes(1);
+            const callArgs = spy.mock.calls[0];
+            
+            // Check table name
+            expect(callArgs[0]).toBe("workbru-places");
+            // Check key
+            expect(callArgs[1]).toEqual({ id: "123e4567-e89b-12d3-a456-426614174000" });
+            // Check that updated place contains the new name
+            expect(callArgs[2].name).toBe("Updated via Spy");
+        });
+    
+        // it("should clear cache after updating a place", async () => {
+        //     const testId = "123e4567-e89b-12d3-a456-426614174000";
+    
+        //     // Step 1: Get the place to populate the cache
+        //     const originalPlace = await getPlaceById(testId);
+        //     expect(originalPlace).not.toBeNull();
+            
+        //     // Step 2: Spy on getItem to verify cache behavior
+        //     const spy = spyOn(dynamodb, "getItem");
+            
+        //     // Step 3: Get the place again - should use cache, not call getItem
+        //     await getPlaceById(testId);
+        //     expect(spy).toHaveBeenCalledTimes(0); // Verify cache was used
+            
+        //     // Step 4: Update the place
+        //     const updateData = { name: "Cache Test Updated" };
+        //     await updatePlace(testId, updateData);
+            
+        //     // Step 5: Reset the spy to get a clean count
+        //     spy.mockClear();
+            
+        //     // Step 6: Get the place again - cache should be invalidated, so getItem should be called
+        //     const updatedPlace = await getPlaceById(testId);
+            
+        //     // Step 7: Verify getItem was called (cache was cleared)
+        //     expect(spy).toHaveBeenCalledTimes(1);
+            
+        //     // Step 8: Verify we got the updated data
+        //     expect(updatedPlace?.name).toBe("Cache Test Updated");
+            
+        //     // Step 9: Get yet again - should use cache now
+        //     spy.mockClear();
+        //     await getPlaceById(testId);
+        //     expect(spy).toHaveBeenCalledTimes(0); // Cache should be used
+        // });
 
         it("should delete a place correctly", async () => {
             const result = await deletePlace("123e4567-e89b-12d3-a456-426614174000");

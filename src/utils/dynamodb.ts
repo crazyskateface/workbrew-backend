@@ -5,9 +5,11 @@ import {
     GetCommand,
     QueryCommand,
     ScanCommand,
-    DeleteCommand
+    DeleteCommand,
+    UpdateCommand
 } from '@aws-sdk/lib-dynamodb';
 import { localDb } from './localdb.js';
+import { ReturnValue } from '@aws-sdk/client-dynamodb';
 
 export const PLACES_TABLE = process.env.PLACES_TABLE || 'workbru-places';
 
@@ -83,6 +85,40 @@ export async function putItem(tablename: string, item: Record<string, any>): Pro
             Item: item,
         })
     );
+}
+
+
+
+export async function updateItem(
+    tableName: string, 
+    key: Record<string, any>, 
+    updateExpression: string, 
+    expressionAttributeNames:Record<string, any>, 
+    expressionAttributeValues: Record<string, any>,
+    returnValues: ReturnValue = 'ALL_NEW'
+): Promise<Record<string, any> | null> {
+    if (useLocalDb) {
+        // return localDb.updateItem(tableName, key, updateExpression, expressionAttributeNames, expressionAttributeValues);
+        console.warn('Local DB updateItem is not fully implemented - using putItem instead');
+        return null;
+    }
+    try {
+        const response = await docClientInstance!.send(
+            new UpdateCommand({
+                TableName: tableName,
+                Key: key,
+                UpdateExpression: updateExpression,
+                ExpressionAttributeNames: expressionAttributeNames,
+                ExpressionAttributeValues: expressionAttributeValues,
+                ReturnValues: returnValues,
+            })
+        );
+
+        return response.Attributes || null;
+    } catch (error) {
+        console.error(`Error updating item in ${tableName}:`, error); 
+        throw new Error(`DynamoDB update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 }
 
 export async function getItem(tableName: string, key: Record<string, any>): Promise<Record<string, any> | null> {
@@ -164,6 +200,49 @@ export async function deleteItem(tableName: string, key: Record<string, any>): P
         console.error(`Error deleting item from ${tableName}:`, error);
         throw new Error(`DynamoDB delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+}
+
+/**
+ * Helper function to update an item with a set of fields
+ */
+export async function updateFields(
+    tableName: string,
+    key: Record<string, any>,
+    fields: Record<string, any>
+): Promise<Record<string, any> | null> {
+    // For the local DB case, it's simpler to just get the item, update it, and put it back
+    if (useLocalDb) {
+        return localDb.updateItem(tableName, key, fields);
+    }
+    
+    // Build the update expression dynamically based on the fields object
+    const updateExpressions: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
+
+    // get a list of key attribute names to exclude them from the update
+    const keyAttributeNames = Object.keys(key);
+    
+    Object.entries(fields).forEach(([key, value]) => {
+        if (value !== undefined && !keyAttributeNames.includes(key)) {
+            updateExpressions.push(`#${key} = :${key}`);
+            expressionAttributeNames[`#${key}`] = key;
+            expressionAttributeValues[`:${key}`] = value;
+        }
+    });
+    
+    // If no fields to update, return null
+    if (updateExpressions.length === 0) {
+        return null;
+    }
+    
+    return updateItem(
+        tableName,
+        key,
+        `SET ${updateExpressions.join(', ')}`,
+        expressionAttributeNames,
+        expressionAttributeValues
+    );
 }
 
 // for backward compatibility with existing imports 
