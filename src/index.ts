@@ -7,3 +7,4 @@ import {getAllPlaces, getPlacesNearby, getPlace, createPlace, updatePlace, delet
 // exports.createPlace = createPlace;
 export {getAllPlaces, getPlacesNearby, getPlace, createPlace, updatePlace, deletePlace};
 export { getUser, updateUser, setAdminStatus, validateAdmin, getCurrentSession } from './handlers/userHandler.js';
+export { login, register, confirmRegistration, respondToNewPasswordChallenge } from './handlers/authHandler.js';

@@ -105,6 +105,51 @@ export class WorkbruStack extends cdk.Stack {
 
         console.log(path.join(__dirname, '../../dist'));
 
+        // Lambda functions for authentication
+        const loginFunction = new lambda.Function(this, 'LoginFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.login',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        });
+
+        const registerFunction = new lambda.Function(this, 'RegisterFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.register',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        });
+
+        const confirmRegistrationFunction = new lambda.Function(this, 'ConfirmRegistrationFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.confirmRegistration',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        });
+
+        const respondToNewPasswordChallengeFunction = new lambda.Function(this, 'RespondToNewPasswordChallengeFunction', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: 'index.respondToNewPasswordChallenge',
+            code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+            environment: {
+                USER_POOL_ID: userPool.userPoolId,
+                USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+                NODE_ENV: 'production'
+            }
+        });
+
         // Lambda functions
         const getAllPlacesFunction = new lambda.Function(this, 'GetAllPlacesFunction', {
             runtime: lambda.Runtime.NODEJS_20_X,
@@ -249,7 +294,11 @@ export class WorkbruStack extends cdk.Stack {
 
         userPool.grant(validateAdminFunction, 'cognito-idp:AdminGetUser');
         userPool.grant(validateAdminFunction, 'cognito-idp:ListUsers');
-        
+
+        userPool.grant(loginFunction, 'cognito-idp:AdminInitiateAuth');
+        userPool.grant(registerFunction, 'cognito-idp:SignUp');
+        userPool.grant(confirmRegistrationFunction, 'cognito-idp:ConfirmSignUp');
+        userPool.grant(respondToNewPasswordChallengeFunction, 'cognito-idp:RespondToAuthChallenge');
 
         // API Gateway
         const api = new apigateway.RestApi(this, 'WorkbruApi', {
@@ -318,6 +367,19 @@ export class WorkbruStack extends cdk.Stack {
             authorizer,
             authorizationType: apigateway.AuthorizationType.COGNITO,
         });
+
+        // Add authentication endpoints
+        const authResource = api.root.addResource('auth');
+        authResource.addMethod('POST', new apigateway.LambdaIntegration(loginFunction));
+
+        const registerResource = authResource.addResource('register');
+        registerResource.addMethod('POST', new apigateway.LambdaIntegration(registerFunction));
+
+        const confirmResource = registerResource.addResource('confirm');
+        confirmResource.addMethod('POST', new apigateway.LambdaIntegration(confirmRegistrationFunction));
+
+        const challengeResource = authResource.addResource('challenge');
+        challengeResource.addMethod('POST', new apigateway.LambdaIntegration(respondToNewPasswordChallengeFunction));
 
         // outputs
         new cdk.CfnOutput(this, 'ApiEndpoint', {
