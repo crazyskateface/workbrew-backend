@@ -3,6 +3,7 @@ import * as placeService from '../services/placeService.js';
 import * as permissionService from '../services/permissionService.js';
 import { Permission } from '../services/permissionService.js';
 import { PlaceSchema } from '../models/place.js';
+import * as headerUtils from '../utils/headers.js';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -265,27 +266,19 @@ export async function deletePlace(event: APIGatewayProxyEvent): Promise<APIGatew
 }
 
 function buildRes(statusCode: number, message: any, error?: any) {
+    let body: Record<string, any> = {};
     
-    var body: {message: string, error?: string} = {message: ""}
     if (typeof message === 'string') {
-        body.message = message
+        body.message = message;
+    } else if (typeof message === 'object') {
+        body = { ...message };
     } else {
-        body.message = JSON.stringify(message);
-    }
-    if (error) {
-        body.error = error.errors
-    } else {
-        // remove the error key if there is no error
-        delete body.error
+        body.message = String(message);
     }
     
-    return {
-        statusCode: statusCode,
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-        },
-        
-        body: JSON.stringify(body)
+    if (error) {
+        body.error = error.errors || error.message || String(error);
     }
+    
+    return headerUtils.createApiResponse(statusCode, body);
 }

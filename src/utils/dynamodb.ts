@@ -10,6 +10,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { localDb } from './localdb.js';
 import { ReturnValue } from '@aws-sdk/client-dynamodb';
+import { APIGatewayProxyResult } from 'aws-lambda';
 
 export const PLACES_TABLE = process.env.PLACES_TABLE || 'workbru-places';
 
@@ -48,6 +49,30 @@ if (!isLocalDev) {
 } else {
     console.log('Development mode: using local in-memory db');
     useLocalDb = true;
+}
+
+/**
+ * Utility function to ensure all responses include proper CORS headers
+ * @param response API Gateway response object
+ * @returns Response with CORS headers added
+ */
+export function withCorsHeaders(response: APIGatewayProxyResult): APIGatewayProxyResult {
+    // Define our CORS headers
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': process.env.CORS_ORIGIN || 'http://localhost:5173',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-CSRF-Token',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE',
+        'Access-Control-Allow-Credentials': 'true'
+    };
+
+    // Merge existing headers with CORS headers
+    return {
+        ...response,
+        headers: {
+            ...response.headers,
+            ...corsHeaders
+        }
+    };
 }
 
 // dynamodb connection pooling
@@ -93,7 +118,7 @@ export async function updateItem(
     tableName: string, 
     key: Record<string, any>, 
     updateExpression: string, 
-    expressionAttributeNames:Record<string, any>, 
+    expressionAttributeNames: Record<string, any> | null, 
     expressionAttributeValues: Record<string, any>,
     returnValues: ReturnValue = 'ALL_NEW'
 ): Promise<Record<string, any> | null> {
@@ -103,15 +128,21 @@ export async function updateItem(
         return null;
     }
     try {
+        const params: any = {
+            TableName: tableName,
+            Key: key,
+            UpdateExpression: updateExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ReturnValues: returnValues,
+        };
+        
+        // Only add ExpressionAttributeNames if provided and not empty
+        if (expressionAttributeNames && Object.keys(expressionAttributeNames).length > 0) {
+            params.ExpressionAttributeNames = expressionAttributeNames;
+        }
+        
         const response = await docClientInstance!.send(
-            new UpdateCommand({
-                TableName: tableName,
-                Key: key,
-                UpdateExpression: updateExpression,
-                ExpressionAttributeNames: expressionAttributeNames,
-                ExpressionAttributeValues: expressionAttributeValues,
-                ReturnValues: returnValues,
-            })
+            new UpdateCommand(params)
         );
 
         return response.Attributes || null;

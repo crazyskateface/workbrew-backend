@@ -142,6 +142,75 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean): Prom
 }
 
 /**
+ * Updates user's password with hashed password and salt
+ */
+export async function updateUserPassword(userId: string, hashedPassword: string, salt: string): Promise<void> {
+    try {
+        const userAttributes = [
+            {
+                Name: 'custom:hashedPassword',
+                Value: hashedPassword
+            },
+            {
+                Name: 'custom:salt',
+                Value: salt
+            }
+        ];
+        
+        const command = new AdminUpdateUserAttributesCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: userId,
+            UserAttributes: userAttributes
+        });
+        
+        await cognitoClient.send(command);
+        console.log(`Password updated for user ${userId} with hashed password and salt`);
+    } catch (error) {
+        console.error('Error updating user password in Cognito:', error);
+        throw error;
+    }
+}
+
+/**
+ * Gets user's salt for password hashing
+ */
+export async function getUserSalt(username: string): Promise<string | null> {
+    try {
+        const user = await getUserByIdOrUsername(username);
+        if (!user) {
+            return null;
+        }
+        
+        return user.attributes['custom:salt'] || null;
+    } catch (error) {
+        console.error('Error getting user salt:', error);
+        return null;
+    }
+}
+
+/**
+ * Verifies if the provided hashed password matches the stored one
+ */
+export async function verifyHashedPassword(username: string, hashedPassword: string): Promise<boolean> {
+    try {
+        const user = await getUserByIdOrUsername(username);
+        if (!user) {
+            return false;
+        }
+        
+        const storedHashedPassword = user.attributes['custom:hashedPassword'];
+        if (!storedHashedPassword) {
+            return false;
+        }
+        
+        return storedHashedPassword === hashedPassword;
+    } catch (error) {
+        console.error('Error verifying hashed password:', error);
+        return false;
+    }
+}
+
+/**
  * Helper function to format the Cognito user response into a more friendly format
  */
 function formatCognitoUser(cognitoUser: any, identifier: string) {
@@ -151,6 +220,7 @@ function formatCognitoUser(cognitoUser: any, identifier: string) {
         attributes: {} as Record<string, string>
     };
     
+    // For AdminGetUserCommand response format
     if (cognitoUser.UserAttributes) {
         for (const attr of cognitoUser.UserAttributes) {
             if (attr.Name && attr.Value) {
@@ -159,5 +229,15 @@ function formatCognitoUser(cognitoUser: any, identifier: string) {
         }
     }
     
+    // For ListUsersCommand response format
+    if (cognitoUser.Attributes) {
+        for (const attr of cognitoUser.Attributes) {
+            if (attr.Name && attr.Value) {
+                user.attributes[attr.Name] = attr.Value;
+            }
+        }
+    }
+    
+    console.log('Formatted user with attributes:', user);
     return user;
 }

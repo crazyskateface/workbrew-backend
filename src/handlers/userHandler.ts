@@ -1,6 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as userService from '../services/userService.js';
 import * as permissionService from '../services/permissionService.js';
+import * as sessionService from '../services/sessionService.js';
+import * as headerUtils from '../utils/headers.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getUser(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
@@ -186,61 +188,128 @@ export async function validateAdmin(event: APIGatewayProxyEvent): Promise<APIGat
  */
 export async function getCurrentSession(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
     try {
-        // Extract the authenticated user's ID
-        const userId = event.requestContext.authorizer?.claims?.sub;
-        if (!userId) {
-            return buildRes(401, 'Authentication required');
+        // Get the session ID from cookie
+        const cookieHeader = event.headers.Cookie || event.headers.cookie;
+        const sessionId = sessionService.getSessionIdFromCookie(cookieHeader);
+        
+        if (!sessionId) {
+            return headerUtils.createErrorResponse(401, 'No active session');
         }
-
-        // Get user data
-        const user = await userService.getUserByIdOrUsername(userId);
-        if (!user) {
-            return buildRes(404, 'User not found');
+        
+        // Get the session details
+        const session = await sessionService.getSessionById(sessionId);
+        
+        if (!session || !session.isValid) {
+            // Clear the invalid cookie using our utility
+            return {
+                statusCode: 401,
+                headers: headerUtils.getClearCookieHeaders(),
+                body: JSON.stringify({
+                    message: 'Invalid or expired session'
+                })
+            };
         }
+        
+        // Touch the session to update lastActivityAt
+        await sessionService.touchSession(sessionId);
+        
+        // Check if we need to rotate the CSRF token
+        let additionalHeaders: Record<string, string> = {};
+        
+        if (
+            session.lastRotatedAt && 
+            (Date.now() - session.lastRotatedAt) >= 15 * 60 * 1000 // 15 minutes
+        ) {
+            const newCsrfToken = await sessionService.rotateCsrfToken(sessionId);
+            
+            if (newCsrfToken) {
+                additionalHeaders['X-New-CSRF-Token'] = newCsrfToken;
+            }
+        }
+        
+        // Return session data using our headers utility
+        return headerUtils.createSuccessResponse({
+            isValid: true,
+            username: session.username,
+            userId: session.userId,
+            issuedAt: session.issuedAt,
+            expiresAt: session.expiresAt,
+            csrfToken: session.csrfToken
+        }, additionalHeaders);
+    } catch (error: any) {
+        console.error('Error getting current session:', error);
+        
+        return buildRes(500, 'Error retrieving session', error);
+    }
+}
 
-        // Check if user is an admin
-        const isAdmin = await permissionService.isUserAdmin(userId);
+/**
+ * Extend a session (refresh the expiration time)
+ */
+export async function extendSession(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+    try {
+        // Get the session ID from cookie
+        const cookieHeader = event.headers.Cookie || event.headers.cookie;
+        const sessionId = sessionService.getSessionIdFromCookie(cookieHeader);
         
-        // Return session data
-        return buildRes(200, {
-            user: user,
-            isAdmin: isAdmin,
-            // Include token details from Cognito claims
-            tokenIssuedAt: event.requestContext.authorizer?.claims?.iat,
-            tokenExpiresAt: event.requestContext.authorizer?.claims?.exp
-        });
-    } catch (error) {
-        console.error('Error getting current session: ', error);
+        if (!sessionId) {
+            return buildRes(401, 'No active session', 'No active session');
+            
+        }
         
-        const errorId = uuidv4();
-        console.error(`Error ID: ${errorId}`, error);
+        // Validate CSRF token
+        const csrfToken = event.headers['X-CSRF-Token'] || event.headers['x-csrf-token'];
+        if (!csrfToken) {
+            return buildRes(403, 'CSRF token required', 'CSRF token required');
+        }
         
-        return buildRes(500, 'Error getting current session', error);
+        // Validate the CSRF token against the session
+        const isValid = await sessionService.validateCsrfToken(sessionId, csrfToken);
+        if (!isValid) {
+            return buildRes(403, 'Invalid CSRF token', 'Invalid CSRF token');
+        }
+        
+        // Extend the session
+        const success = await sessionService.extendSession(sessionId);
+        
+        if (!success) {
+            return buildRes(400, 'Failed to extend session', 'Failed to extend session');
+        }
+        
+        // Rotate the CSRF token
+        const newCsrfToken = await sessionService.rotateCsrfToken(sessionId);
+        
+        // Use the headers utility with custom headers for the CSRF token
+        const additionalHeaders: Record<string, string> = {};
+        if (newCsrfToken) {
+            additionalHeaders['X-New-CSRF-Token'] = newCsrfToken;
+        }
+        
+        return headerUtils.createSuccessResponse({
+            message: 'Session extended successfully',
+            csrfToken: newCsrfToken
+        }, additionalHeaders);
+    } catch (error: any) {
+        console.error('Error extending session:', error);
+        
+        return buildRes(500, 'Error extending session', error);
     }
 }
 
 function buildRes(statusCode: number, message: any, error?: any) {
+    let body: Record<string, any> = {};
     
-    var body: {message: string, error?: string} = {message: ""}
     if (typeof message === 'string') {
-        body.message = message
+        body.message = message;
+    } else if (typeof message === 'object') {
+        body = { ...message };
     } else {
-        body.message = JSON.stringify(message);
-    }
-    if (error) {
-        body.error = error.errors
-    } else {
-        // remove the error key if there is no error
-        delete body.error
+        body.message = String(message);
     }
     
-    return {
-        statusCode: statusCode,
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-        },
-        
-        body: JSON.stringify(body)
+    if (error) {
+        body.error = error.errors || error.message || String(error);
     }
+    
+    return headerUtils.createApiResponse(statusCode, body);
 }

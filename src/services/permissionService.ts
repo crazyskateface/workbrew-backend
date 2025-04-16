@@ -81,3 +81,24 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
         return false; // Fail closed - deny admin access on error
     }
 }
+
+/**
+ * Use the already retrieved user object to check if the user is an admin
+ * @param user 
+ * @returns boolean
+ */
+export async function userIsAdmin(user: any): Promise<boolean> {
+    try {
+        console.log(`[permissionService] Checking admin status for user:`, user);
+        if (!user) return false;
+        
+        const isAdmin = 
+            (user.attributes['custom:isAdmin'] === 'true') || 
+            (user.attributes.isAdmin === 'true');
+        
+        return isAdmin;
+    } catch (error) {
+        console.error(`Error checking admin status for user:`, error);
+        return false; // Fail closed - deny admin access on error
+    }
+}
